@@ -1,0 +1,94 @@
+---
+title: "Russia Life Expectancy"
+author: "Diane Xue"
+date: "3/10/2020"
+output: html_document 
+---
+
+```{r setup, include=FALSE}
+#set working directory
+setwd("C:/Users/diane/OneDrive/Documents/RWorkingDirectory/")
+
+# key setups
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(captioner)
+library(ggplot2)
+library(tinytex)
+
+# captions
+library(captioner)
+table_nums <- captioner(prefix = "Table")
+figure_nums <- captioner(prefix = "Figure")
+
+# for having DIV tags
+knitr::knit_hooks$set(class = function(before, options, envir) {
+  if(before){
+    sprintf("<div class = '%s'>", options$class)
+  }else{
+    "</div>"
+  }
+})
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+# Russia
+```{r figurename, echo=FALSE, fig.cap= "Map of Russia", out.width = '90%'}
+knitr::include_graphics("russiamap.jpg")
+```
+_The following information was retrieved from [CIA World Factbook](https://www.cia.gov/library/publications/the-world-factbook/geos/rs.html)_
+
+Founded in the 12th century, the Principality of Muscovy was able to emerge from over 200 years of Mongol domination (13th-15th centuries) and to gradually conquer and absorb surrounding principalities. In the early 17th century, a new ROMANOV Dynasty continued this policy of expansion across Siberia to the Pacific. Under PETER I (ruled 1682-1725), hegemony was extended to the Baltic Sea and the country was renamed the Russian Empire. During the 19th century, more territorial acquisitions were made in Europe and Asia. Defeat in the Russo-Japanese War of 1904-05 contributed to the Revolution of 1905, which resulted in the formation of a parliament and other reforms. Devastating defeats and food shortages in World War I led to widespread rioting in the major cities of the Russian Empire and to the overthrow in 1917 of the ROMANOV Dynasty. The communists under Vladimir LENIN seized power soon after and formed the USSR. The brutal rule of Iosif STALIN (1928-53) strengthened communist rule and Russian dominance of the Soviet Union at a cost of tens of millions of lives. After defeating Germany in World War II as part of an alliance with the US (1939-1945), the USSR expanded its territory and influence in Eastern Europe and emerged as a global power. The USSR was the principal adversary of the US during the Cold War (1947-1991). The Soviet economy and society stagnated in the decades following Stalin's rule, until General Secretary Mikhail GORBACHEV (1985-91) introduced glasnost (openness) and perestroika (restructuring) in an attempt to modernize communism, but his initiatives inadvertently released forces that by December 1991 led to the dissolution of the USSR into Russia and 14 other independent states.
+
+Following economic and political turmoil during President Boris YELTSIN's term (1991-99), Russia shifted toward a centralized authoritarian state under President Vladimir PUTIN (2000-2008, 2012-present) in which the regime seeks to legitimize its rule through managed elections, populist appeals, a foreign policy focused on enhancing the country's geopolitical influence, and commodity-based economic growth. Russia faces a largely subdued rebel movement in Chechnya and some other surrounding regions, although violence still occurs throughout the North Caucasus.
+
+# Life Expectancy Data
+The data used for this project is from the Human Mortality Database found at  [www.mortality.org](https://www.mortality.org/cgi-bin/hmd/country.php?cntr=RUS&level=1).The Human Mortality Database makes demographic data for 41 countries available for the public.The Russian data, in particular, were received from E. Andreev and S. Zakharov. For geopolitical reasons, Russian population statistics began including the Crimea region and Sevastopol since 2015; the data in the Human Mortality Database ends after 2014. 
+
+Life expectancy tells us the average age of death in a population. Life expectancy tends to be positively correlated with a country's economic condition and is often used as a metric to determine a country's overall well-being. 
+
+The first few years of collected Russian life expectancy are shown below:
+
+```{r echo=FALSE}
+
+#caption
+table_nums(name = 'Russian_life_expectancy', caption = 'Russian Life Expectancy, 1 x 1 (first 6 records)')
+# read the data
+russiaLE <- read.table("russiadata.txt", skip = 2, header = TRUE, stringsAsFactors = FALSE)
+
+# if HTML, use kableExtra
+if(knitr::is_html_output()){
+  kable(head(russiaLE), format = "html") %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width = F, position = "left")
+}
+
+```
+The plot below shows the average life expectancy for Russia over the entire time period of data collection, not stratified by sex. 
+
+```{r echo=FALSE}
+total <- select(russiaLE, Year, Total)
+ggplot(data = total, aes(x = Year, y = Total))+
+  geom_bar(stat = "identity")+
+  ylab("life expectancy in years (1959-2014)")+
+  xlab("year")
+
+```
+
+# Data Analysis
+
+The Human Mortality Database includes life expectancy data from 1959 to 2014. Life Expectancy steadily increased from 2005-2014. Using `summary(russiaLE)`, I obtained summary statistics for the dataset. Average life expectancy for both sexes combined peaked in 2014 at 70.92. However, there is a signficiant difference between female and male life expectancy. I conducted a two-sample t-test to compare life expectancy between females and males with a null hypothesis that the true difference in means is equal to 0. Using `t.test(russiaLE$Female, russiaLE$Male)`, I obtained the following results: 
+
+**mean of Female Life Expectancy = 73.36**
+
+**mean of Male Life Expectancy = 62.23**
+
+**p-value < 2.23-16**
+```{r}
+
+summary(russiaLE)
+t.test(russiaLE$Female, russiaLE$Male)
+
+```
+
+Using alpha = 0.05, a p-value less than 0.05 means we can reject the null hypothesis that there is no true difference in means between male and female life expectancy. 
